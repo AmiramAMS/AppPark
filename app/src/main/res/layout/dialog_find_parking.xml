@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Search bar -->
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/svSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:queryHint="Search by address..."
+        android:iconifiedByDefault="false" />
+
+    <!-- Distance row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="12dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Distance: "
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvDistanceValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="10"
+            android:textStyle="bold"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="km" />
+    </LinearLayout>
+
+    <!-- Slider 0-50 km -->
+    <com.google.android.material.slider.Slider
+        android:id="@+id/sliderDistance"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:valueFrom="0"
+        android:valueTo="50"
+        android:stepSize="1"
+        android:value="10"
+        android:layout_marginTop="6dp" />
+
+    <!-- List of available reports -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvAvailable"
+        android:layout_width="match_parent"
+        android:layout_height="420dp"
+        android:layout_marginTop="12dp" />
+
+</LinearLayout>

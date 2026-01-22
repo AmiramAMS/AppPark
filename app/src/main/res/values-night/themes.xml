@@ -1,0 +1,28 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.ParkMate" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary colors -->
+        <item name="colorPrimary">@color/primary_light</item>
+        <item name="colorPrimaryVariant">@color/primary</item>
+        <item name="colorOnPrimary">@color/text_primary</item>
+        
+        <!-- Secondary colors -->
+        <item name="colorSecondary">@color/secondary_light</item>
+        <item name="colorSecondaryVariant">@color/secondary</item>
+        <item name="colorOnSecondary">@color/text_primary</item>
+        
+        <!-- Background colors -->
+        <item name="android:colorBackground">#121212</item>
+        <item name="colorSurface">#1E1E1E</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+        <item name="colorOnBackground">#FFFFFF</item>
+        
+        <!-- Error color -->
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/white</item>
+        
+        <!-- Status bar -->
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

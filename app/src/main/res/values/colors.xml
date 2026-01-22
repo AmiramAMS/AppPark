@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base Colors -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    
+    <!-- Primary Color Palette - Modern Blue/Teal for Parking App -->
+    <color name="primary">#2196F3</color>
+    <color name="primary_dark">#1976D2</color>
+    <color name="primary_light">#BBDEFB</color>
+    
+    <!-- Secondary Colors -->
+    <color name="secondary">#4CAF50</color>
+    <color name="secondary_dark">#388E3C</color>
+    <color name="secondary_light">#C8E6C9</color>
+    
+    <!-- Status Colors -->
+    <color name="available">#4CAF50</color>
+    <color name="available_light">#E8F5E9</color>
+    <color name="taken">#F44336</color>
+    <color name="taken_light">#FFEBEE</color>
+    
+    <!-- Background Colors -->
+    <color name="background">#F5F5F5</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#F0F0F0</color>
+    
+    <!-- Text Colors -->
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="text_hint">#BDBDBD</color>
+    
+    <!-- Accent Colors -->
+    <color name="accent">#FF9800</color>
+    <color name="accent_light">#FFF3E0</color>
+    
+    <!-- Divider -->
+    <color name="divider">#E0E0E0</color>
+    
+    <!-- Error -->
+    <color name="error">#F44336</color>
+</resources>

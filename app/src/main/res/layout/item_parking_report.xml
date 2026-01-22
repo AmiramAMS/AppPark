@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="4dp"
+    android:layout_marginEnd="4dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:strokeWidth="0dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
+
+        <!-- Status Indicator -->
+        <View
+            android:id="@+id/statusIndicator"
+            android:layout_width="4dp"
+            android:layout_height="match_parent"
+            android:background="@color/available"
+            android:layout_marginEnd="12dp"
+            android:minHeight="80dp" />
+
+        <!-- Parking Image -->
+        <ImageView
+            android:id="@+id/ivParkingImage"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@drawable/parking_placeholder"
+            android:scaleType="centerCrop"
+            android:background="@color/surface_variant"
+            android:contentDescription="Parking spot image"
+            app:cardCornerRadius="12dp" />
+
+        <!-- Content -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp">
+
+            <!-- Address -->
+            <TextView
+                android:id="@+id/tvAddress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📍 Herzl 12"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary" />
+
+            <!-- Status Badge -->
+            <com.google.android.material.chip.Chip
+                android:id="@+id/tvStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AVAILABLE"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginTop="8dp"
+                app:chipBackgroundColor="@color/available_light"
+                app:chipStrokeWidth="0dp"
+                app:chipCornerRadius="8dp"
+                app:chipMinHeight="32dp" />
+
+            <!-- Mark as Taken Checkbox -->
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/cbMarkAsTaken"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mark as taken"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginTop="12dp"
+                app:buttonTint="@color/taken" />
+
+        </LinearLayout>
+
+        <!-- Arrow Icon -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="›"
+            android:textSize="24sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginStart="4dp" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

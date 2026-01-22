@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/loginFragment">
+
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.parkmate.LoginFragment"
+        android:label="Login">
+        <action
+            android:id="@+id/action_loginFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.parkmate.HomeFragment"
+        android:label="Home">
+
+        <action
+            android:id="@+id/action_homeFragment_to_profileFragment"
+            app:destination="@id/profileFragment" />
+
+        <action
+            android:id="@+id/action_homeFragment_to_reportDetailsFragment"
+            app:destination="@id/reportDetailsFragment" />
+
+        <action
+            android:id="@+id/action_homeFragment_to_addReportFragment"
+            app:destination="@id/addReportFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.parkmate.ProfileFragment"
+        android:label="Profile" />
+
+    <fragment
+        android:id="@+id/reportDetailsFragment"
+        android:name="com.example.parkmate.ReportDetailsFragment"
+        android:label="Details" />
+
+    <fragment
+        android:id="@+id/addReportFragment"
+        android:name="com.example.parkmate.AddReportFragment"
+        android:label="Add Report" />
+
+</navigation>
