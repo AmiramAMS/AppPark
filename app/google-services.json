@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1094229654802",
+    "project_id": "apppark-5ed26",
+    "storage_bucket": "apppark-5ed26.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1094229654802:android:06e61151ccc2cd5a4847cb",
+        "android_client_info": {
+          "package_name": "com.example.parkmate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDD613NTTk-8w6hMRnCPNGRoR0Uaul3BMM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
