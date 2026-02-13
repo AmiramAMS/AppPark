@@ -4,17 +4,25 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.example.parkmate.data.callback.Callback;
+import com.example.parkmate.data.model.User;
+import com.example.parkmate.data.repository.AuthRepository;
+import com.example.parkmate.data.repository.UserRepository;
 import com.example.parkmate.databinding.FragmentLoginBinding;
+import com.google.firebase.Timestamp;
 
 public class LoginFragment extends Fragment {
 
     private FragmentLoginBinding binding;
+    private final AuthRepository authRepository = new AuthRepository();
+    private final UserRepository userRepository = new UserRepository();
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -28,28 +36,37 @@ public class LoginFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // LOGIN (דמו)
+        // LOGIN
         binding.btnLogin.setOnClickListener(v -> {
-
-            // 1️⃣ לוקחים את הנתונים מהשדות
-            String email = binding.etEmail.getText().toString().trim();
+            String email = binding.etEmail.getText() == null ? "" : binding.etEmail.getText().toString().trim();
+            String password = binding.etPassword.getText() == null ? "" : binding.etPassword.getText().toString().trim();
 
             if (email.isEmpty()) {
                 binding.etEmail.setError("Please enter email");
                 return;
             }
+            if (password.isEmpty()) {
+                binding.etPassword.setError("Please enter password");
+                return;
+            }
 
-            // 2️⃣ שמירה מקומית (SharedPreferences)
-            requireContext()
-                    .getSharedPreferences("parkmate_prefs", 0)
-                    .edit()
-                    .putString("user_email", email)
-                    .putString("user_name", email.split("@")[0]) // שם זמני
-                    .apply();
+            binding.btnLogin.setEnabled(false);
+            authRepository.signIn(email, password, new Callback<String>() {
+                @Override
+                public void onSuccess(String uid) {
+                    if (!isAdded() || binding == null) return;
+                    binding.btnLogin.setEnabled(true);
+                    NavHostFragment.findNavController(LoginFragment.this)
+                            .navigate(R.id.action_loginFragment_to_homeFragment);
+                }
 
-            // 3️⃣ ניווט ל־Home
-            NavHostFragment.findNavController(LoginFragment.this)
-                    .navigate(R.id.action_loginFragment_to_homeFragment);
+                @Override
+                public void onError(Exception e) {
+                    if (!isAdded() || binding == null) return;
+                    binding.btnLogin.setEnabled(true);
+                    Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
         });
 
 
@@ -64,23 +81,59 @@ public class LoginFragment extends Fragment {
             }
         });
 
-        // SIGN UP (דמו)
+        // SIGN UP
         binding.btnSignup.setOnClickListener(v -> {
-            String fullName = binding.etFullName.getText().toString().trim();
-            String email = binding.etSignupEmail.getText().toString().trim();
+            String fullName = binding.etFullName.getText() == null ? "" : binding.etFullName.getText().toString().trim();
+            String email = binding.etSignupEmail.getText() == null ? "" : binding.etSignupEmail.getText().toString().trim();
+            String password = binding.etSignupPassword.getText() == null ? "" : binding.etSignupPassword.getText().toString().trim();
 
-            if (fullName.isEmpty()) fullName = "Guest";
-            if (email.isEmpty()) email = "demo@mail.com";
+            if (fullName.isEmpty()) {
+                binding.etFullName.setError("Please enter full name");
+                return;
+            }
+            if (email.isEmpty()) {
+                binding.etSignupEmail.setError("Please enter email");
+                return;
+            }
+            if (password.isEmpty()) {
+                binding.etSignupPassword.setError("Please enter password");
+                return;
+            }
+            if (password.length() < 6) {
+                binding.etSignupPassword.setError("Password must be at least 6 characters");
+                return;
+            }
 
-            requireContext()
-                    .getSharedPreferences("user_prefs", 0)
-                    .edit()
-                    .putString("username", fullName)
-                    .putString("email", email)
-                    .apply();
-            // כאן בעתיד סטודנט 2 יחבר Firebase / שרת
-            NavHostFragment.findNavController(LoginFragment.this)
-                    .navigate(R.id.action_loginFragment_to_homeFragment);
+            binding.btnSignup.setEnabled(false);
+            authRepository.signUp(email, password, new Callback<String>() {
+                @Override
+                public void onSuccess(String uid) {
+                    User user = new User(uid, email, fullName, 10, Timestamp.now());
+                    userRepository.createUser(user, new Callback<Void>() {
+                        @Override
+                        public void onSuccess(Void ignored) {
+                            if (!isAdded() || binding == null) return;
+                            binding.btnSignup.setEnabled(true);
+                            NavHostFragment.findNavController(LoginFragment.this)
+                                    .navigate(R.id.action_loginFragment_to_homeFragment);
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            if (!isAdded() || binding == null) return;
+                            binding.btnSignup.setEnabled(true);
+                            Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    if (!isAdded() || binding == null) return;
+                    binding.btnSignup.setEnabled(true);
+                    Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
         });
     }
 
