@@ -344,6 +344,7 @@
 
             <!-- Action Buttons -->
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNavigate"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:text="🧭 Navigate"
@@ -379,6 +380,19 @@
                 android:textColor="@color/white"
                 app:cornerRadius="16dp"
                 android:layout_marginTop="12dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDeleteReport"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="🗑️ Delete report"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/taken"
+                android:textColor="@color/white"
+                app:cornerRadius="16dp"
+                android:layout_marginTop="12dp"
+                android:visibility="gone" />
 
         </LinearLayout>
 

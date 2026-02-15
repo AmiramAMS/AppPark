@@ -80,12 +80,13 @@
             android:layout_marginStart="8dp" />
     </LinearLayout>
 
-    <!-- Current location (until GPS integration exists) -->
+    <!-- Current location (hidden, filled by GPS) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="12dp">
+        android:layout_marginTop="12dp"
+        android:visibility="gone">
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="0dp"

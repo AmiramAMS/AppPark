@@ -16,12 +16,22 @@ public class ParkingReportAdapter extends RecyclerView.Adapter<ParkingReportAdap
         void onItemClick(ParkingReport report);
     }
 
+    public interface OnMarkAsTakenListener {
+        void onMarkAsTaken(ParkingReport report);
+    }
+
     private final List<ParkingReport> items;
     private final OnItemClickListener listener;
+    private final OnMarkAsTakenListener markAsTakenListener;
 
     public ParkingReportAdapter(List<ParkingReport> items, OnItemClickListener listener) {
+        this(items, listener, null);
+    }
+
+    public ParkingReportAdapter(List<ParkingReport> items, OnItemClickListener listener, OnMarkAsTakenListener markAsTakenListener) {
         this.items = items;
         this.listener = listener;
+        this.markAsTakenListener = markAsTakenListener;
     }
 
     @NonNull
@@ -40,9 +50,26 @@ public class ParkingReportAdapter extends RecyclerView.Adapter<ParkingReportAdap
         ParkingReport report = items.get(position);
 
         holder.binding.tvAddress.setText(report.address);
-        holder.binding.tvStatus.setText(report.status);
+        holder.binding.tvStatus.setText(statusToDisplay(report.status));
+
+        holder.binding.cbMarkAsTaken.setVisibility(android.view.View.VISIBLE);
+        holder.binding.cbMarkAsTaken.setOnCheckedChangeListener(null);
+        holder.binding.cbMarkAsTaken.setChecked(false);
+        holder.binding.cbMarkAsTaken.setOnCheckedChangeListener((v, isChecked) -> {
+            if (isChecked && markAsTakenListener != null) markAsTakenListener.onMarkAsTaken(report);
+        });
 
         holder.binding.getRoot().setOnClickListener(v -> listener.onItemClick(report));
+    }
+
+    private static String statusToDisplay(String status) {
+        if (status == null) return "";
+        switch (status) {
+            case "occupied": return "Taken";
+            case "available": return "Available";
+            case "not_relevant": return "Not relevant";
+            default: return status;
+        }
     }
 
     @Override

@@ -1,11 +1,15 @@
 package com.example.parkmate;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+
+import androidx.navigation.fragment.NavHostFragment;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -65,9 +69,29 @@ public class ReportDetailsFragment extends Fragment {
 
                 String address = report.getAddress() == null ? "Unknown address" : report.getAddress();
                 String status = report.getStatus() == null ? "" : report.getStatus();
+                String statusDisplay = "occupied".equals(status) ? "Taken" : "available".equals(status) ? "Available" : status;
 
                 binding.tvDetailsAddress.setText(address);
-                binding.tvDetailsStatus.setText(status);
+                binding.tvDetailsStatus.setText(statusDisplay);
+
+                if ("occupied".equals(status)) {
+                    binding.btnDeleteReport.setVisibility(View.VISIBLE);
+                    binding.btnDeleteReport.setOnClickListener(v -> confirmDelete());
+                } else {
+                    binding.btnDeleteReport.setVisibility(View.GONE);
+                }
+
+                binding.btnNavigate.setOnClickListener(v -> {
+                    Uri uri = Uri.parse("google.navigation:q=" + report.getLatitude() + "," + report.getLongitude());
+                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                    intent.setPackage("com.google.android.apps.maps");
+                    if (intent.resolveActivity(requireContext().getPackageManager()) != null) {
+                        startActivity(intent);
+                    } else {
+                        intent.setPackage(null);
+                        startActivity(Intent.createChooser(intent, null));
+                    }
+                });
 
                 if (report.getCreatedAt() != null) {
                     String formatted = DateFormat.format("dd/MM/yyyy HH:mm", report.getCreatedAt().toDate()).toString();
@@ -111,6 +135,29 @@ public class ReportDetailsFragment extends Fragment {
                 binding.tvReporterName.setText("Anonymous");
             }
         });
+    }
+
+    private void confirmDelete() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Delete report")
+                .setMessage("Are you sure you want to delete this report?")
+                .setPositiveButton("Delete", (d, which) -> {
+                    parkingReportRepository.deleteReport(reportId, new Callback<Void>() {
+                        @Override
+                        public void onSuccess(Void ignored) {
+                            if (!isAdded() || binding == null) return;
+                            Toast.makeText(requireContext(), "Report deleted", Toast.LENGTH_SHORT).show();
+                            NavHostFragment.findNavController(ReportDetailsFragment.this).popBackStack();
+                        }
+                        @Override
+                        public void onError(Exception e) {
+                            if (!isAdded() || binding == null) return;
+                            Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void openRateDialog() {

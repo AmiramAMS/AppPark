@@ -1,5 +1,7 @@
 package com.example.parkmate;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,10 +12,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.material.slider.Slider;
 
 import com.example.parkmate.data.callback.Callback;
@@ -24,6 +29,9 @@ import com.example.parkmate.data.repository.UserRepository;
 import com.example.parkmate.databinding.FragmentHomeBinding;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
 
 public class HomeFragment extends Fragment {
@@ -62,12 +70,58 @@ public class HomeFragment extends Fragment {
         // RecyclerView
         binding.rvReports.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        // Adapter
-        adapter = new ParkingReportAdapter(demo, this::openDetails);
+        // Adapter (main list: mark as taken updates DB and local status)
+        adapter = new ParkingReportAdapter(demo, this::openDetails, report -> {
+            parkingReportRepository.updateReportStatus(report.id, "occupied", new Callback<Void>() {
+                @Override
+                public void onSuccess(Void ignored) {
+                    if (!isAdded() || binding == null) return;
+                    report.status = "occupied";
+                    adapter.notifyDataSetChanged();
+                }
+                @Override
+                public void onError(Exception e) {
+                    if (!isAdded() || binding == null) return;
+                    Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+        });
         binding.rvReports.setAdapter(adapter);
 
         // Find parking nearby -> opens dialog
         binding.btnFindNearby.setOnClickListener(v -> showFindParkingDialog());
+
+        requestLocationPermissionAndFetch();
+    }
+
+    private static final int REQUEST_CODE_LOCATION = 1001;
+
+    private void requestLocationPermissionAndFetch() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_LOCATION);
+            return;
+        }
+        fetchAndStoreLocation();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE_LOCATION && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            fetchAndStoreLocation();
+        }
+    }
+
+    private void fetchAndStoreLocation() {
+        FusedLocationProviderClient client = LocationServices.getFusedLocationProviderClient(requireActivity());
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+            return;
+        client.getLastLocation().addOnSuccessListener(location -> {
+            if (location != null && isAdded()) {
+                UserLocationHolder.set(location.getLatitude(), location.getLongitude());
+            }
+        });
     }
 
     @Override
@@ -95,6 +149,11 @@ public class HomeFragment extends Fragment {
 
         com.google.android.material.button.MaterialButton btnFilterParkingLot = dialogView.findViewById(R.id.btnFilterParkingLot);
         com.google.android.material.button.MaterialButton btnFilterEntertainment = dialogView.findViewById(R.id.btnFilterEntertainment);
+
+        if (UserLocationHolder.hasLocation()) {
+            etUserLat.setText(String.format(Locale.US, "%.6f", UserLocationHolder.getLat()));
+            etUserLng.setText(String.format(Locale.US, "%.6f", UserLocationHolder.getLng()));
+        }
 
         String uid = authRepository.getCurrentUid();
         if (uid == null) {
@@ -156,13 +215,29 @@ public class HomeFragment extends Fragment {
 
         ArrayList<ParkingReport> filtered = new ArrayList<>();
 
-        ParkingReportAdapter dialogAdapter = new ParkingReportAdapter(filtered, report -> {
+        final ParkingReportAdapter[] adapterHolder = new ParkingReportAdapter[1];
+        adapterHolder[0] = new ParkingReportAdapter(filtered, report -> {
             dialog.dismiss();
             openDetails(report);
+        }, report -> {
+            parkingReportRepository.updateReportStatus(report.id, "occupied", new Callback<Void>() {
+                @Override
+                public void onSuccess(Void ignored) {
+                    if (!isAdded()) return;
+                    filtered.remove(report);
+                    adapterHolder[0].notifyDataSetChanged();
+                }
+                @Override
+                public void onError(Exception e) {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
         });
-        rvDialog.setAdapter(dialogAdapter);
+        rvDialog.setAdapter(adapterHolder[0]);
 
         final String[] selectedPlaceType = new String[]{"parking_lot"};
+        ParkingReportAdapter dialogAdapter = adapterHolder[0];
         btnFilterParkingLot.setOnClickListener(v -> {
             selectedPlaceType[0] = "parking_lot";
             loadAvailableNearby(filtered, dialogAdapter, etUserLat, etUserLng, sliderDistance, selectedPlaceType[0]);
@@ -217,22 +292,41 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        int radiusKm = Math.round(sliderDistance.getValue());
-        parkingReportRepository.getAvailableReportsNear(userLat, userLng, radiusKm, placeType, new Callback<ArrayList<com.example.parkmate.data.model.ParkingReport>>() {
+        final int radiusKm = Math.round(sliderDistance.getValue());
+        parkingReportRepository.getReports(new Callback<ArrayList<com.example.parkmate.data.model.ParkingReport>>() {
             @Override
             public void onSuccess(ArrayList<com.example.parkmate.data.model.ParkingReport> reports) {
                 if (!isAdded()) return;
-                target.clear();
+                float[] results = new float[1];
+                List<com.example.parkmate.data.model.ParkingReport> filtered = new ArrayList<>();
                 for (com.example.parkmate.data.model.ParkingReport r : reports) {
+                    if (!"available".equals(r.getStatus())) continue;
+                    if (!placeType.equals(r.getPlaceType() != null ? r.getPlaceType().trim() : "")) continue;
+                    android.location.Location.distanceBetween(
+                            userLat, userLng,
+                            r.getLatitude(), r.getLongitude(),
+                            results);
+                    if (results[0] / 1000f <= radiusKm) filtered.add(r);
+                }
+                Collections.sort(filtered, new Comparator<com.example.parkmate.data.model.ParkingReport>() {
+                    @Override
+                    public int compare(com.example.parkmate.data.model.ParkingReport a, com.example.parkmate.data.model.ParkingReport b) {
+                        int byStars = Double.compare(b.getRatingAverage(), a.getRatingAverage());
+                        if (byStars != 0) return byStars;
+                        long at = a.getCreatedAt() == null ? 0 : a.getCreatedAt().getSeconds();
+                        long bt = b.getCreatedAt() == null ? 0 : b.getCreatedAt().getSeconds();
+                        return Long.compare(bt, at);
+                    }
+                });
+                target.clear();
+                for (com.example.parkmate.data.model.ParkingReport r : filtered) {
                     String address = (r.getAddress() == null || r.getAddress().trim().isEmpty())
-                            ? "Unknown address"
-                            : r.getAddress().trim();
+                            ? "Unknown address" : r.getAddress().trim();
                     String status = r.getStatus() == null ? "" : r.getStatus();
                     target.add(new ParkingReport(r.getId(), address, status));
                 }
                 adapter.notifyDataSetChanged();
             }
-
             @Override
             public void onError(Exception e) {
                 if (!isAdded()) return;
@@ -242,25 +336,69 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadReports() {
+        String uid = authRepository.getCurrentUid();
+        if (uid != null) {
+            userRepository.getUser(uid, new Callback<User>() {
+                @Override
+                public void onSuccess(User user) {
+                    if (!isAdded()) return;
+                    doLoadReports((float) user.getRadiusPreference());
+                }
+                @Override
+                public void onError(Exception e) {
+                    if (!isAdded()) return;
+                    doLoadReports(10f);
+                }
+            });
+        } else {
+            doLoadReports(10f);
+        }
+    }
+
+    private void doLoadReports(float radiusKm) {
         parkingReportRepository.getReports(new Callback<ArrayList<com.example.parkmate.data.model.ParkingReport>>() {
             @Override
             public void onSuccess(ArrayList<com.example.parkmate.data.model.ParkingReport> reports) {
                 if (!isAdded() || binding == null) return;
 
-                demo.clear();
+                double userLat = UserLocationHolder.hasLocation() ? UserLocationHolder.getLat() : Double.NaN;
+                double userLng = UserLocationHolder.hasLocation() ? UserLocationHolder.getLng() : Double.NaN;
 
+                List<com.example.parkmate.data.model.ParkingReport> filtered = new ArrayList<>();
+                float[] results = new float[1];
                 for (com.example.parkmate.data.model.ParkingReport r : reports) {
-                    String address = (r.getAddress() == null || r.getAddress().trim().isEmpty())
-                            ? "Unknown address"
-                            : r.getAddress().trim();
-                    String status = r.getStatus() == null ? "" : r.getStatus();
-
-                    demo.add(new ParkingReport(r.getId(), address, status));
+                    if (Double.isNaN(userLat) || Double.isNaN(userLng)) {
+                        filtered.add(r);
+                        continue;
+                    }
+                    android.location.Location.distanceBetween(
+                            userLat, userLng,
+                            r.getLatitude(), r.getLongitude(),
+                            results);
+                    float distanceKm = results[0] / 1000f;
+                    if (distanceKm <= radiusKm) filtered.add(r);
                 }
 
+                Collections.sort(filtered, new Comparator<com.example.parkmate.data.model.ParkingReport>() {
+                    @Override
+                    public int compare(com.example.parkmate.data.model.ParkingReport a, com.example.parkmate.data.model.ParkingReport b) {
+                        int byStars = Double.compare(b.getRatingAverage(), a.getRatingAverage());
+                        if (byStars != 0) return byStars;
+                        long at = a.getCreatedAt() == null ? 0 : a.getCreatedAt().getSeconds();
+                        long bt = b.getCreatedAt() == null ? 0 : b.getCreatedAt().getSeconds();
+                        return Long.compare(bt, at);
+                    }
+                });
+
+                demo.clear();
+                for (com.example.parkmate.data.model.ParkingReport r : filtered) {
+                    String address = (r.getAddress() == null || r.getAddress().trim().isEmpty())
+                            ? "Unknown address" : r.getAddress().trim();
+                    String status = r.getStatus() == null ? "" : r.getStatus();
+                    demo.add(new ParkingReport(r.getId(), address, status));
+                }
                 adapter.notifyDataSetChanged();
             }
-
             @Override
             public void onError(Exception e) {
                 if (!isAdded() || binding == null) return;

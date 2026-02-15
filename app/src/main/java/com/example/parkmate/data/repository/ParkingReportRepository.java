@@ -132,6 +132,24 @@ public class ParkingReportRepository {
                 .addOnFailureListener(callback::onError);
     }
 
+    public void updateReportStatus(String reportId, String status, Callback<Void> callback) {
+        if (!isValidContractStatus(status)) {
+            callback.onError(new IllegalArgumentException("Invalid status"));
+            return;
+        }
+        db.collection(COLLECTION_REPORTS).document(reportId)
+                .update("status", status.trim())
+                .addOnSuccessListener(unused -> callback.onSuccess(null))
+                .addOnFailureListener(callback::onError);
+    }
+
+    public void deleteReport(String reportId, Callback<Void> callback) {
+        db.collection(COLLECTION_REPORTS).document(reportId)
+                .delete()
+                .addOnSuccessListener(unused -> callback.onSuccess(null))
+                .addOnFailureListener(callback::onError);
+    }
+
     public void getReportById(String reportId, Callback<ParkingReport> callback) {
         db.collection(COLLECTION_REPORTS)
                 .document(reportId)
